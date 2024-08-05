@@ -90,7 +90,7 @@ func CreateOrderItem() gin.HandlerFunc {
 			orderItem.Unit_price = &num
 		}
 		insertOrderItems, err := orderItemCollection.InsertMany(ctx, orderItemsToBeInserted)
-
+		defer cancel()
 		if err != nil {
 			log.Fatal(err)
 		}
