@@ -105,7 +105,21 @@ func CreateInvoice() gin.HandlerFunc {
 		}
 		invoice.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		invoice.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-		
+
+		invoice.ID = primitive.NewObjectID()
+		invoice.Invoice_id = invoice.ID.Hex()
+
+		result, resultErr := invoiceCollection.InsertOne(ctx, invoice)
+
+		if resultErr != nil {
+			msg := "Invoice was not Created"
+			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
+			return
+
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, result)
 
 	}
 }
@@ -127,12 +141,17 @@ func UpdateInvoice() gin.HandlerFunc {
 
 		var updateObj primitive.D
 
-		status := "PENDING"
+		// status := "PENDING"
 
 		if invoice.Payment_status != nil {
-			invoice.Payment_status = &status
+			updateObj = append(updateObj, bson.E{Key: "payment_status", Value: invoice.Payment_status})
 
 		}
+		if invoice.Payment_method != nil {
+			updateObj = append(updateObj, bson.E{Key: "payment_method", Value: invoice.Payment_method})
+
+		}
+
 		invoice.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		updateObj = append(updateObj, bson.E{Key: "updated_at", Value: invoice.Updated_at})
 
